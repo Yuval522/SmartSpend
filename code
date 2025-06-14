@@ -1,0 +1,125 @@
+
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { LayoutDashboard, PlusCircle, Target, TrendingUp, MessageCircle, User, Calendar, Palette } from "lucide-react";
+import { MoodProvider, useMood } from "./components/ui/MoodContext";
+import MoodWrapper from "./components/ui/MoodWrapper";
+
+const navigationItems = [
+  { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
+  { title: "Add Expense", url: createPageUrl("AddExpense"), icon: PlusCircle },
+  { title: "Budget Goals", url: createPageUrl("BudgetGoals"), icon: Target },
+  { title: "Calendar", url: createPageUrl("BudgetCalendar"), icon: Calendar },
+  { title: "Analytics", url: createPageUrl("Analytics"), icon: TrendingUp },
+  { title: "AI Assistant", url: createPageUrl("AIAssistant"), icon: MessageCircle },
+  { title: "Profile", url: createPageUrl("Profile"), icon: User },
+];
+
+function LayoutContent({ children, currentPageName }) {
+  const location = useLocation();
+  const { getMoodStyles, isPlayfulMode, togglePlayfulMode, mood, budgetHealth } = useMood();
+  const styles = getMoodStyles();
+
+  const getMoodEmoji = () => {
+    switch (mood) {
+      case 'good': return '😊';
+      case 'warning': return '😐';
+      case 'danger': return '😰';
+      default: return '🙂';
+    }
+  };
+
+  const getMoodMessage = () => {
+    switch (mood) {
+      case 'good': return 'Great job! You\'re on track';
+      case 'warning': return 'Watch your spending';
+      case 'danger': return 'Budget exceeded!';
+      default: return 'Let\'s track your expenses';
+    }
+  };
+
+  return (
+    <MoodWrapper>
+      {/* Main Content */}
+      <main className="pb-32">
+        {children}
+      </main>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-t border-neutral-200 px-2 py-2 z-50">
+        {/* Mood Indicator */}
+        <div className="flex items-center justify-center mb-2 px-4">
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mood-card`}>
+            <span className="text-base">{getMoodEmoji()}</span>
+            <span className="mood-text">{getMoodMessage()}</span>
+            <div className={`w-8 h-1 rounded-full bg-gradient-to-r`} 
+                 style={{background: `linear-gradient(to right, ${styles.primary}, ${styles.secondary})`}}>
+              <div 
+                className="h-full bg-white/50 rounded-full transition-all duration-500"
+                style={{width: `${100 - budgetHealth}%`}}
+              />
+            </div>
+          </div>
+          <button
+            onClick={togglePlayfulMode}
+            className="ml-2 p-1 rounded-full hover:bg-white/20 transition-colors"
+          >
+            <Palette className={`w-4 h-4 ${isPlayfulMode ? 'mood-primary' : 'text-neutral-400'}`} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-4 gap-1">
+          {navigationItems.slice(0, 4).map((item) => (
+            <Link
+              key={item.title}
+              to={item.url}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all duration-200 ${
+                location.pathname === item.url
+                  ? 'text-white mood-bg-primary'
+                  : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
+              }`}
+              style={location.pathname === item.url ? {
+                background: `linear-gradient(135deg, ${styles.primary}, ${styles.secondary})`,
+                animation: isPlayfulMode ? 'gentle-float 2s ease-in-out infinite' : 'none'
+              } : {}}
+            >
+              <item.icon className="w-6 h-6" />
+              <span className="text-xs font-medium">{item.title === "Budget Goals" ? "Budget" : item.title}</span>
+            </Link>
+          ))}
+        </div>
+        
+        {/* Second Row */}
+        <div className="grid grid-cols-3 gap-1 mt-1">
+          {navigationItems.slice(4).map((item) => (
+            <Link
+              key={item.title}
+              to={item.url}
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all duration-200 ${
+                location.pathname === item.url
+                  ? 'text-white mood-bg-primary'
+                  : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
+              }`}
+              style={location.pathname === item.url ? {
+                background: `linear-gradient(135deg, ${styles.primary}, ${styles.secondary})`,
+                animation: isPlayfulMode ? 'gentle-float 2s ease-in-out infinite' : 'none'
+              } : {}}
+            >
+              <item.icon className="w-6 h-6" />
+              <span className="text-xs font-medium">{item.title}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
+    </MoodWrapper>
+  );
+}
+
+export default function Layout({ children, currentPageName }) {
+  return (
+    <MoodProvider>
+      <LayoutContent children={children} currentPageName={currentPageName} />
+    </MoodProvider>
+  );
+}
